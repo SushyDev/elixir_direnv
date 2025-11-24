@@ -11,37 +11,31 @@
 				let
 					pkgs = import nixpkgs { inherit system; };
 					inherit (pkgs) stdenv;
-
-					globalPackages = [
-						pkgs.beamMinimal28Packages.elixir_1_19
-						pkgs.beamMinimal28Packages.erlang
-						pkgs.unzip
-						pkgs.asdf-vm
-						pkgs.mise
-						pkgs.vfox
-					];
-
-					linuxOnlyPackages = if stdenv.isLinux then [
-						pkgs.watchman
-						pkgs.inotify-tools
-					] else [];
 				in 
 				{
 					default = pkgs.mkShell {
-						buildInputs = globalPackages ++ linuxOnlyPackages;
+						buildInputs =
+							let
+								globalPackages = [
+									pkgs.beamMinimal28Packages.elixir_1_19
+									pkgs.beamMinimal28Packages.erlang
+									pkgs.unzip
+									pkgs.asdf-vm
+									pkgs.mise
+									pkgs.vfox
+								];
 
-						shellHook = ''
-							echo "Elixir version: $(elixir --version)"
-						'';
+								linuxOnlyPackages = pkgs.lib.optional stdenv.isLinux [
+									pkgs.watchman
+									pkgs.inotify-tools
+								];
+							in
+							globalPackages ++ linuxOnlyPackages;
 					};
 				}
 			);
 		in
-		let
-			supportedSystems = nixpkgs.lib.platforms.all;
-			packages = {};
-		in
 		{
-			inherit devShells packages;
+			inherit devShells;
 		};
 }
